@@ -1,0 +1,117 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+li{
+    list-style-type: none; 
+}
+
+.avatar{
+    clip-path: circle(25px at 50% 50%);
+}
+
+.alpha-rules{
+    text-decoration: none;
+    color: black;
+}
+
+.alpha-rules:hover{
+    text-decoration: underline;
+    color: red;
+}
+
+body {
+    background-color: rgb(34, 107, 0);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: grid;
+    grid-template-rows: auto 1fr auto; 
+    min-height: 100vh;
+}
+
+body.bg-img{
+    background-image: var(--bg-url, url('../assets/fent.jpg'));
+    background-size: cover;
+    background-position: center;
+}
+
+.top-panel{
+    background: rgba(194, 118, 47, 0.9);
+    display: flex;
+    flex-wrap: nowrap;
+    height: 100%;
+    justify-content: space-between;
+    align-items: center;
+    align-content: center;
+    gap: 15px;
+    padding: 5px 50px;
+    box-sizing: border-box;
+    min-height: 50px;
+}
+
+.top-panel >*{
+    align-self: center;
+}
+
+.box{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+}
+
+.item{
+    justify-self: center;
+    align-self: center;
+}
+
+main {
+    padding: 2rem;
+    color: white;
+}
+
+.default-flex{
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+.default-flex.maininfo{
+    padding: 2rem;
+    border-radius: 1rem;
+    height: 50%;
+    font-size: 18px;
+    justify-content: space-between; 
+    align-items: center; 
+    align-content: center; 
+    gap: 15px;
+    padding: 15px 25px;
+    box-sizing: border-box;
+    color: rgb(255, 251, 248);
+    background-color: rgba(99, 59, 22, 0.65);
+}
+
+.menugrid{
+    color: rgb(255, 251, 248);
+    background-color: rgba(99, 59, 22, 0.65);
+    display: grid;
+    grid-template-columns: 40% 20% 40%;
+    grid-template-areas: "b b a" "b b c" "b b c";
+    gap: 20px;
+    padding: 15px 20px;
+    justify-items: center;
+    align-items: center;
+    justify-content: space-between;
+    align-content: space-between;
+}
+
+
+footer{
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
