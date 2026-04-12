@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Таблица игроков</title>
+    <style>
+        .table-players {
+            text-align: center;
+            width: 600px;
+            border-collapse: collapse; /* Убирает двойные границы */
+        }
+
+        .table-players td {
+            background-color: aliceblue;
+            border-top: 2px solid yellow;
+            padding: 8px; /* Добавляем отступы для читаемости */
+        }
+
+        .table-players th {
+            background-color: #f0f0f0;
+            padding: 8px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        /* Дополнительные стили для красоты */
+        .table-players tr:hover td {
+            background-color: #e0f0ff; /* Подсветка при наведении */
+        }
+    </style>
+    
+    <!-- Подключаем библиотеку Clipsheet -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@katlyn/clipsheet": "https://esm.sh/jsr/@katlyn/clipsheet"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <table id="players-table" class="table-players">
+        <thead>
+            <tr id="table-header">
+                <!-- Шапка будет заполнена автоматически -->
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <tr>
+                <td colspan="5">Загрузка данных...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script type="module">
+        import clipsheet from "@katlyn/clipsheet";
+
+        const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1_jtC5l_77H1GTRKlzDT3t-NBJoKRtUVEaw5c8Pu9DCY/edit?gid=0#gid=0";
+
+        async function loadTableData() {
+            const tableBody = document.getElementById('table-body');
+            const tableHeader = document.getElementById('table-header');
+            
+            try {
+                // Загружаем данные из Google Sheets
+                const data = await clipsheet(GOOGLE_SHEET_URL);
+                
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5">Нет данных</td></tr>';
+                    return;
+                }
+                
+                // Получаем названия колонок из первого объекта
+                const headers = Object.keys(data[0]);
+                
+                // Строим шапку таблицы
+                tableHeader.innerHTML = '';
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    tableHeader.appendChild(th);
+                });
+                
+                // Строим строки таблицы
+                tableBody.innerHTML = '';
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    headers.forEach(header => {
+                        const td = document.createElement('td');
+                        td.textContent = row[header] !== undefined && row[header] !== null ? row[header] : '';
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                });
+                
+                console.log(`Загружено ${data.length} строк`);
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+                tableBody.innerHTML = '<tr><td colspan="5">Ошибка загрузки данных. Проверьте консоль.</td></tr>';
+            }
+        }
+        
+        // Загружаем таблицу
+        loadTableData();
+        
+        // Опционально: обновляем данные каждые 5 минут (300000 мс)
+        // setInterval(loadTableData, 300000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="shortcut icon" href="../assets/favicon.ico" type="image/x-icon">
+      <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
+      <title>Alpha Striker | Таблица игроков</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <link rel="stylesheet" href="../css/alphastriker.css">
+      <script type="module" src="../js/authorization.js"></script>
+      <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+      <!--<script type="module" src="../js/table-loader.js"></script>-->
+  </head>
+  <body class="bg-img" style="--bg-url: url(../assets/fent3.jpg)">
+    <header class="top-panel">
+      <div class="box">
+        <h1> <a href="https://vk.me/join/DXNA5uG6TxQoIxzDrTTBXiU/4/10yQEykQo=" class="alpha-rules">Российская Лига Альфа Удара</a></h1>
+      </div>
+      <div>
+        <h3><a href="alphastriker.html" class="alpha-rules">Главная</a></h3>
+      </div>
+      <div>
+        <h3> <a href="alphastriker-players.html" class="alpha-rules">Таблица лидеров</a></h3>
+      </div>
+      <div>
+        <h3>Конструктор</h3>
+      </div>
+      <div>
+        <h3> <a href="Testing/tabletest.html" class="alpha-rules">О нас</a></h3>
+      </div>
+      <div>
+        <div id="loginForm">
+          <div class="default-flex" style="gap: 5px;">
+            <input class="item" type="text" id="login" placeholder="Логин">
+            <input class="item" type="password" id="password" placeholder="Пароль">
+            <button class="item" id="loginButton">Войти</button>
+          </div>
+        </div>
+        <div id="userGreeting" style="display: none;">
+          <div class="default-flex" style="gap: 5px;">
+            <img class="avatar item" src="../assets/avatarplaceholder.jpg" alt="Avatar" width="90" height="auto">
+            <span class="item">Привет, <span style="font-weight: 700;" id="username"></span>!</span>
+            <button class="item" id="logoutButton">Выйти</button>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main>
+      <div class="menugrid">
+        <div style="align-self: center; justify-self: center;">
+          <input type="file" id="excelInput" accept=".xlsx, .xls">
+          <button id="loadBtn">Загрузить и показать данные</button>
+          <div id="output"></div>
+          <table class="table-lobby">
+            <thead>
+              <tr id="table-header">
+                <td>Звание</td>
+                <td>Имя Игрока</td>
+                <td>Город</td>
+                <td>Контакты</td>
+                <td>Локация (приоритет)</td>
+                <td>Фракция</td>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr>
+                <td>Хз</td>
+                <td>Пачев Олег</td>
+                <td>Москва</td>
+                <td>@OzR1K</td>
+                <td>ХГ Римская</td>
+                <td>Волк какой-то</td>
+              </tr>
+              <tr>
+                <td>Хз</td>
+                <td>Кулешов Андрей, Палыч</td>
+                <td>Москва</td>
+                <td>@Palych139</td>
+                <td>ХГ Филевский Парк</td>
+                <td>Понятия не имею...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    <footer>
+      Подвал сайта
+    </footer>
+  </body>
+</html>

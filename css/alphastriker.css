@@ -14,7 +14,7 @@ li{
 
 .alpha-rules{
     text-decoration: none;
-    color: black;
+    color: White;
 }
 
 .alpha-rules:hover{
@@ -22,8 +22,11 @@ li{
     color: red;
 }
 
+header{
+    color: White;
+}
 body {
-    background-color: rgb(34, 107, 0);
+    background-color: rgb(65, 65, 65);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: grid;
     grid-template-rows: auto 1fr auto; 
@@ -31,7 +34,7 @@ body {
 }
 
 body.bg-img{
-    background-image: var(--bg-url, url('../assets/fent.jpg'));
+    /*background-image: var(--bg-url, url('../assets/fent.jpg'));*/
     background-size: cover;
     background-position: center;
 }
@@ -52,9 +55,10 @@ body.bg-img{
 
 .top-panel >*{
     align-self: center;
+    justify-self: center;
 }
 
-.box{
+.column-flex{
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -96,16 +100,32 @@ main {
     color: rgb(255, 251, 248);
     background-color: rgba(99, 59, 22, 0.65);
     display: grid;
-    grid-template-columns: 40% 20% 40%;
-    grid-template-areas: "b b a" "b b c" "b b c";
     gap: 20px;
     padding: 15px 20px;
+}
+
+.menugrid.mainpage{
+    grid-template-areas: "a a b b" "a a b b" "c c c c";
+    grid-template-columns: 40% 20% 25%;
     justify-items: center;
     align-items: center;
     justify-content: space-between;
     align-content: space-between;
 }
 
+.highlight-element{
+    border-top: 2px solid rgba(150, 118, 47, 0.95);
+}
+
+.table-lobby{
+    text-align: center;
+    border-collapse: collapse;
+    width: 600px;
+}
+
+.table-lobby td{
+    border-top: 1px solid  rgba(200, 118, 47, 0.9);
+}
 
 footer{
     padding: 15px 30px;

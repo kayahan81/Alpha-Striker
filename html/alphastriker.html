@@ -5,33 +5,111 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="shortcut icon" href="../assets/favicon.ico" type="image/x-icon">
       <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
-      <title>Alpha Striker | Сайт по подбору соперников </title>
+      <title>Alpha Striker | Главная</title>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
       <link rel="stylesheet" href="../css/alphastriker.css">
+      <script type="module" src="../js/authorization.js"></script>
+      <script type="module" src="../js/lobby-operations.js"></script>
   </head>
   <body class="bg-img" style="--bg-url: url(../assets/fent3.jpg)">
     <header class="top-panel">
-      <div class="box">
+      <div>
         <!-- https://hobbygames.ru/download/rules/bt-alpha-strike-rules.pdf -->
         <h1> <a href="https://vk.me/join/DXNA5uG6TxQoIxzDrTTBXiU/4/10yQEykQo=" class="alpha-rules">Российская Лига Альфа Удара</a></h1>
       </div>
-      <div class="default-flex">
-        <div class="item">
-          <img class="avatar" src="../assets/avatarplaceholder.jpg" alt="Avatar" width="90" height="auto">
+      <div>
+        <h3><a href="alphastriker.html" class="alpha-rules">Главная</a></h3>
+      </div>
+      <div>
+        <h3> <a href="alphastriker-players.html" class="alpha-rules">Таблица лидеров</a></h3>
+      </div>
+      <div>
+        <h3>Конструктор</h3>
+      </div>
+      <div>
+        <h3> <a href="alphastriker-about.html" class="alpha-rules">О нас</a></h3>
+      </div>
+      <div>
+        <div id="loginForm">
+          <div class="default-flex" style="gap: 5px;">
+            <input class="item" type="text" id="login" placeholder="Логин">
+            <input class="item" type="password" id="password" placeholder="Пароль">
+            <button class="item" id="loginButton">Войти</button>
+          </div>
         </div>
-        <div class="item">
-          <h1>%username%</h1>
+        <div id="userGreeting" style="display: none;">
+          <div class="default-flex" style="gap: 5px;">
+            <img class="avatar item" src="../assets/avatarplaceholder.jpg" alt="Avatar" width="90" height="auto">
+            <span class="item">Привет, <span style="font-weight: 700;" id="username"></span>!</span>
+            <button class="item" id="logoutButton">Выйти</button>
+          </div>
         </div>
       </div>
     </header>
     <main>
-      <div class="menugrid">
-        <div style="grid-area: a;">
-          <button>Создать вызов!</button>
+      <div class="menugrid mainpage">
+        <div style="grid-area: b;">
+          <div class="menugrid" style="gap: 5px;">
+            <h2>Быстрое создание/поиск лобби</h2>
+            <div>
+              <label for="place">Место встречи:</label>
+              <input type="text" id="place" placeholder="Место встречи" value="Main Meeting Place">
+            </div>
+            <div>
+              <label for="size">Размер армии:</label>
+              <input type="number" id="size" min="0" max="9999" value="81">
+            </div>
+            <div>
+              <label for="faction">Фракция:</label>
+              <select id="faction">
+                <option value="Clan Wolf">Clan Wolf</option>
+                <option value="Clan Jade Falcon">Clan Jade Falcon</option>
+                <option value="Clan Ghost Bear">Clan Ghost Bear</option>
+                <option value="Inner Sphere">Inner Sphere</option>
+              </select>
+            </div>
+            <div>
+              <label>
+                <input type="checkbox" id="ranked">
+                Рейтинговый матч
+              </label>
+            </div>
+            <button id="createLobbyButton">Создать лобби!</button>
+            <div>
+              <label for="lobbyIdInput">ID лобби:</label>
+              <input type="number" id="lobbyIdInput" min="1" max="1000" value="18">
+            </div>
+            <button id="joinLobbyByIdButton">Зайти в лобби!</button>
+            <button id="lookUpLobbyByIdButton">Найти лобби!</button>
+          </div>
         </div>
-        <div style="grid-area: b; align-self: center; justify-self: center;">
-          Недавние вызовы:
-          <div>
+        <div style="grid-area: a; align-self: center; justify-self: center;">
+          <div style="align-self: center; justify-self: center;">Ближайшие бои:</div>
+          <div style="align-self: center; justify-self: center;">
+            <table class="table-lobby">
+              <tr>
+                <td>Имя Игрока</td>
+                <td>Размер</td>
+                <td>Эпоха</td>
+                <td>Место</td>
+                <td>Дата и время</td>
+              </tr>
+              <tr>
+                <td>Влад Борщ 2004</td>
+                <td>600</td>
+                <td>Мезозой</td>
+                <td>Клуб "Фистинг"</td>
+                <td>02.04.2026 12:37</td>
+              </tr>
+              <tr>
+                <td>Влад Борщ 2004</td>
+                <td>600</td>
+                <td>Мезозой</td>
+                <td>Клуб "Фистинг"</td>
+                <td>02.04.2026 13:48</td>
+              </tr>
+            </table>
+            <!--
             <ul>
               <li>
                 Игрок1 Место Дата
@@ -41,8 +119,8 @@
               </li>
               <li>
                 Игрок3 Место Дата
-              </li>              
-            </ul>
+              </li>           
+            </ul>--> 
           </div>
         </div>
         <div style="grid-area: c;">

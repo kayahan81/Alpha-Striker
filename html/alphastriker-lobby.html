@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="../assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
+    <title>Alpha Striker | Главная</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/alphastriker.css">
+    <script type="module" src="../js/authorization.js"></script>
+    <script type="module" src="../js/lobby-operations.js"></script>
+		<script type="module" src="../js/player-operations.js"></script>
+  </head>
+  <body class="bg-img" style="--bg-url: url(../assets/fent3.jpg)">
+    <header class="top-panel">
+      <div>
+        <!-- https://hobbygames.ru/download/rules/bt-alpha-strike-rules.pdf -->
+        <h1> <a href="https://vk.me/join/DXNA5uG6TxQoIxzDrTTBXiU/4/10yQEykQo=" class="alpha-rules">Российская Лига Альфа Удара</a></h1>
+      </div>
+      <div>
+        <h3><a href="alphastriker.html" class="alpha-rules">Главная</a></h3>
+      </div>
+      <div>
+        <h3> <a href="alphastriker-players.html" class="alpha-rules">Таблица лидеров</a></h3>
+      </div>
+      <div>
+        <h3>Конструктор</h3>
+      </div>
+      <div>
+        <h3> <a href="alphastriker-about.html" class="alpha-rules">О нас</a></h3>
+      </div>
+      <div>
+        <div id="loginForm">
+          <div class="default-flex" style="gap: 5px;">
+            <input class="item" type="text" id="login" placeholder="Логин">
+            <input class="item" type="password" id="password" placeholder="Пароль">
+            <button class="item" id="loginButton">Войти</button>
+          </div>
+        </div>
+        <div id="userGreeting" style="display: none;">
+          <div class="default-flex" style="gap: 5px;">
+            <img class="avatar item" src="../assets/avatarplaceholder.jpg" alt="Avatar" width="90" height="auto">
+            <span class="item">Привет, <span style="font-weight: 700;" id="username"></span>!</span>
+            <button class="item" id="logoutButton">Выйти</button>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main>
+      
+      <div class="menugrid">
+      	<div id="lobbyContainer" class="default-flex" style="flex-direction: column; gap: 15px;">
+          <div>
+						ID lobby, mesto, data
+					</div>
+					<div id="playersList" class="default-flex" style="flex-direction: column; gap: 5px; font-size: larger;">
+						<!-- Первый игрок -->
+						<div class="highlight-element">
+							<input type="checkbox" id="user1ReadyFlag">
+							Ready? <span id="user1NameSpan">Player2_name</span><span id="user1IdSpan">ID</span> <span id="user1FactionSpan">faction</span>
+						</div>
+						<!-- Второй игрок -->
+						<div class="highlight-element">
+							<div id="joinForm" style="display: block;">
+								<!-- когда будет смена фракций убрать выбор фракции заранее-->
+								<select id="user2FactionSelector">
+									<option value="AddNewFaction">Добавить фракцию</option>
+              	  <option value="Clan Wolf">Clan Wolf</option>
+              	  <option value="Clan Jade Falcon">Clan Jade Falcon</option>
+              	  <option value="Clan Ghost Bear">Clan Ghost Bear</option>
+              	  <option value="Inner Sphere">Inner Sphere</option>
+              	</select>
+                <input type="text" id="user2FactionSelectorNameInput" placeholder="Введите название фракции" style="display: block;">                
+								<button id="joinLobbyByIdButton">Присоединиться</button>
+							</div>
+							<div id="playerForm" style="display: none;">
+								<input type="checkbox" id="user2ReadyFlag">
+								Ready? <span id="user2NameSpan">Player2_name</span><span id="user2IdSpan">ID</span> <span id="user2FactionSpan">faction</span>
+							</div>
+              <div id="inviteForm" style="display: none;">
+                Пригласи друга!
+              </div>					
+						</div>
+					</div>
+					<div class="default-flex" style="flex-direction: column; gap: 5px;">
+						<div class="highlight-element">
+							When 2 ready
+							<button>Dogovorilis</button>
+						</div>
+						<div class="highlight-element">
+							when boi ended
+							<select>
+								<option>player1</option>
+								<option>player2</option>
+              </select>
+							<button>End match</button>
+						</div>
+					</div>
+        </div>
+      </div>
+    </main>
+    <footer>
+      Подвал сайта
+    </footer>
+  </body>
+</html>

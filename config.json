@@ -1,0 +1,4 @@
+{
+    "backend_address": "http://localhost",
+    "port": "8080"
+}
