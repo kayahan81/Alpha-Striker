@@ -48,56 +48,9 @@
       </div>
     </header>
     <main>
-      
-      <div class="menugrid">
-      	<div id="lobbyContainer" class="default-flex" style="flex-direction: column; gap: 15px;">
-          <div>
-						ID lobby, mesto, data
-					</div>
-					<div id="playersList" class="default-flex" style="flex-direction: column; gap: 5px; font-size: larger;">
-						<!-- Первый игрок -->
-						<div class="highlight-element">
-							<input type="checkbox" id="user1ReadyFlag">
-							Ready? <span id="user1NameSpan">Player2_name</span><span id="user1IdSpan">ID</span> <span id="user1FactionSpan">faction</span>
-						</div>
-						<!-- Второй игрок -->
-						<div class="highlight-element">
-							<div id="joinForm" style="display: block;">
-								<!-- когда будет смена фракций убрать выбор фракции заранее-->
-								<select id="user2FactionSelector">
-									<option value="AddNewFaction">Добавить фракцию</option>
-              	  <option value="Clan Wolf">Clan Wolf</option>
-              	  <option value="Clan Jade Falcon">Clan Jade Falcon</option>
-              	  <option value="Clan Ghost Bear">Clan Ghost Bear</option>
-              	  <option value="Inner Sphere">Inner Sphere</option>
-              	</select>
-                <input type="text" id="user2FactionSelectorNameInput" placeholder="Введите название фракции" style="display: block;">                
-								<button id="joinLobbyByIdButton">Присоединиться</button>
-							</div>
-							<div id="playerForm" style="display: none;">
-								<input type="checkbox" id="user2ReadyFlag">
-								Ready? <span id="user2NameSpan">Player2_name</span><span id="user2IdSpan">ID</span> <span id="user2FactionSpan">faction</span>
-							</div>
-              <div id="inviteForm" style="display: none;">
-                Пригласи друга!
-              </div>					
-						</div>
-					</div>
-					<div class="default-flex" style="flex-direction: column; gap: 5px;">
-						<div class="highlight-element">
-							When 2 ready
-							<button>Dogovorilis</button>
-						</div>
-						<div class="highlight-element">
-							when boi ended
-							<select>
-								<option>player1</option>
-								<option>player2</option>
-              </select>
-							<button>End match</button>
-						</div>
-					</div>
-        </div>
+      <div class="menugrid" style="text-align: center;">
+        <div style="justify-self: center;" id="lobbyInfo">Номер лобби, место, Размер армии, </div>
+        <div class="lobby-container" style="grid-template-columns: repeat(2,50%); justify-items: center;" id="lobbyContainer"></div>
       </div>
     </main>
     <footer>

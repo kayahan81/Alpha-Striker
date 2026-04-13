@@ -37,7 +37,7 @@ export const serverConfig = {
                     get: 'lobbies',
                     join: 'join',
                     ready: 'ready',
-                    delete: 'api/lobby/delete',
+                    matchfinished: 'match-finished',
                     list: 'api/lobby/list',
                 }
             }

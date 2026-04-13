@@ -1,7 +1,7 @@
 import { auth } from './authorization.js';
 import { serverConfig } from './authorization.js';
 import { playerop } from './player-operations.js';
-
+import { playerCard } from './player-operations.js';
 
 export const lobbyDataParser = {
     parse(responseData) {
@@ -65,7 +65,7 @@ export const lobbyDataParser = {
     }
 }
 
-export const lobbyop = {
+export const lobbyManager = {
     createPlayerData(playerId, faction){
         const playerKey = `player${playerId}`;
         return {
@@ -129,7 +129,7 @@ export const lobbyop = {
         }
     },
     
-    async lookUpLobbyById(inputLobbyId){
+    async getLobbyById(inputLobbyId){
         if (!auth.isLoggedIn()) {
             alert('Авторизуйтесь')
             console.error('Ошибка: пользователь не авторизован');
@@ -213,7 +213,7 @@ export const lobbyop = {
         } 
     },
 
-    async playerReadyInLobbyById(playerId, inputLobbyId){
+    async playerReadyInLobbyById(inputLobbyId){
         if (!auth.isLoggedIn()) {
             alert('Авторизуйтесь')
             console.error('Ошибка: пользователь не авторизован');
@@ -229,9 +229,9 @@ export const lobbyop = {
                     headers: {
                         'Authorization': 'Bearer ' + auth.getToken(),
                     },
-                    body: {
-                        "playerId": auth.getPlayerId(),
-                    }            
+                    body: JSON.stringify({
+                        playerId: +auth.getPlayerId(),
+                    })            
                 })
                 
                 if (!response.ok) {
@@ -254,7 +254,50 @@ export const lobbyop = {
             }
         } 
           
-    }
+    },
+    
+    async playerReadyToEndInLobbyById(inputLobbyId){
+        if (!auth.isLoggedIn()) {
+            alert('Авторизуйтесь')
+            console.error('Ошибка: пользователь не авторизован');
+            return {
+                success: false,
+                error: "Сеанс устарел. Авторизуйтесь снова."
+            };
+        }
+        else{
+            try{
+                const response = await fetch(`${serverConfig.getUrl()}${serverConfig.getEndpoints().lobby.get}/${inputLobbyId}/${serverConfig.getEndpoints().lobby.matchfinished}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + auth.getToken(),
+                    },
+                    body: JSON.stringify({
+                        playerId: +auth.getPlayerId(),
+                    })            
+                })
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert('Ошибка подтверждения готовности')
+                    throw new Error(errorData.message || 'Ошибка подтверждения готовности');
+                }
+                const data = await response.json();
+                return {
+                    success: true,
+                    data: data
+                };                
+            }
+            catch(error){
+                console.error('Ошибка подтверждения готовности:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        } 
+          
+    },
 
 };
 
@@ -301,6 +344,12 @@ async function handleLobbyCreation() {
         createLobbyButton.disabled = false;
         createLobbyButton.textContent = 'Создать лобби!';
     }
+
+    if (result.success) {
+        window.location.href = `../html/alphastriker-lobby.html?id=${result.data.id}`;
+    } else {
+        alert('Ошибка: ' + result.error);
+    }
 }
 
 function getLobbyIdFromUrl() {
@@ -310,86 +359,56 @@ function getLobbyIdFromUrl() {
 }
 
 
-// Функция обновления интерфейса после перехода на страницу
+// Функция обновления интерфейса после перехода на страницу 
 async function updateUIAfterLoadingLobby() {
-    const result = await lobbyop.lookUpLobbyById(getLobbyIdFromUrl());
-    const lobbyData = lobbyDataParser.parse(result.data);
+    try {
 
-    const joinForm = document.getElementById('joinForm');
-    const playerForm = document.getElementById('playerForm');
-    const inviteForm = document.getElementById('inviteForm');
+        const currentPlayerId = auth.getPlayerId();
+        const availableFactions = await playerop.getFactionsByPlayerId(currentPlayerId);
+        
+        // Получаем данные лобби
+        const lobbyId =  getLobbyIdFromUrl();
+        const result = await lobbyManager.getLobbyById(lobbyId);
+        const lobbyData = lobbyDataParser.parse(result.data);
 
-    const user1ReadyFlag = document.getElementById('user1ReadyFlag');
-    const user1IdSpan = document.getElementById('user1IdSpan');
-    const user1NameSpan = document.getElementById('user1NameSpan');
-    const user1FactionSpan = document.getElementById('user1FactionSpan');
+        const lobbyInfo = document.getElementById('lobbyInfo');
+        if(!lobbyInfo) return;
 
-    const user2ReadyFlag = document.getElementById('user2ReadyFlag');
-    const user2IdSpan = document.getElementById('user2IdSpan');
-    const user2NameSpan = document.getElementById('user2NameSpan');
-    const user2FactionSpan = document.getElementById('user2FactionSpan');
-    const user2FactionSelector = document.getElementById('user2FactionSelector');
-    const user2FactionSelectorNameInput = document.getElementById('user2FactionSelectorNameInput');
+        lobbyInfo.innerHTML = `<div>Бой номер ${lobbyData.id} в ${lobbyData.meetingPlace}</div><div>Условия: Размер - ${lobbyData.matchSize}</div>`;
 
-    try{
-        if (user1ReadyFlag) user1ReadyFlag.checked = lobbyData.players[0].isReady;
-        if (lobbyData.players[0].isReady || auth.getPlayerId() != lobbyData.players[0].id) user1ReadyFlag.disabled = true;
-        if (user1IdSpan) user1IdSpan.textContent = '#'+lobbyData.players[0].id;
-        if (user1NameSpan) user1NameSpan.textContent = await playerop.getNameById(lobbyData.players[0].id);
-        if (user1FactionSpan) user1FactionSpan.textContent = 'Фракция: '+lobbyData.players[0].faction;
-        if (lobbyData.players[1]){
-            if (joinForm) joinForm.style.display = 'none';
-            if (playerForm) playerForm.style.display = 'block';
-            if (inviteForm) inviteForm.style.display = 'none';      
-            if (user2ReadyFlag) user2ReadyFlag.checked = lobbyData.players[1].isReady;
-            if (lobbyData.players[1].isReady || auth.getPlayerId() != lobbyData.players[1].id) user2ReadyFlag.disabled = true;
-            if (user2IdSpan) user2IdSpan.textContent = '#'+lobbyData.players[1].id;
-            if (user2NameSpan) user2NameSpan.textContent = await playerop.getNameById(lobbyData.players[1].id);
-            if (user2FactionSpan) user2FactionSpan.textContent = 'Фракция: '+lobbyData.players[1].faction;
-        }
-        else if (lobbyData.hostPlayerId == auth.getPlayerId()){
-            if (joinForm) joinForm.style.display = 'none';
-            if (playerForm) playerForm.style.display = 'none';      
-            if (inviteForm) inviteForm.style.display = 'block';      
+
+        
+        const lobbyContainer = document.getElementById('lobbyContainer');
+        if (!lobbyContainer) return;
+        
+        lobbyContainer.innerHTML = '';
+        
+        // Рендерим карточки игроков
+        for (let i = 0; i < 2; i++) {
+            const player = lobbyData.players[i];
+            const isCurrentPlayer = player?.id == currentPlayerId;            
+            const card = new playerCard(
+                player,
+                i,
+                isCurrentPlayer,
+                getLobbyIdFromUrl(),
+                lobbyData,
+                availableFactions
+            );
             
+            lobbyContainer.appendChild(card.render());
         }
-        else{
-            if (joinForm) joinForm.style.display = 'block';
-            if (playerForm) playerForm.style.display = 'none';
-            user2FactionSelector.addEventListener('change', ()=>user2FactionSelectorNameInput.style.display = user2FactionSelector.value === 'AddNewFaction' ? 'block' : 'none');
-        }
-    }
-    catch(error){
+        
+    } catch (error) {
         console.error('Ошибка вывода:', error);
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
 }
 
-function updateUIAfterReady(){
-    const lobbyData = lobbyDataParser.parse(result.data);
-    if(lobbyData.players[0].id == auth.getPlayerId) {const userReadyFlag = document.getElementById('user1ReadyFlag')}
-    else if (lobbyData.players[1].id == auth.getPlayerId){const userReadyFlag = document.getElementById('user2ReadyFlag')}
-    playerReadyInLobbyById(userReadyFlag);
-}
-
-function updateUIAfterJoiningLobby() {
-    const loginForm = document.getElementById('loginForm');
-    const userGreeting = document.getElementById('userGreeting');
-    const usernameSpan = document.getElementById('username');
-    
-    if (loginForm) loginForm.style.display = 'none';
-    if (userGreeting) userGreeting.style.display = 'block';
-    if (usernameSpan) usernameSpan.textContent = userData.playerId || auth.getPlayerId();
-}
-
-
-async function handlelookUpLobbyById() {
+async function handleGetLobbyById() {
 
     const lobbyIdInput = document.getElementById('lobbyIdInput');
-    const lookUpLobbyByIdButton = document.getElementById('lookUpLobbyByIdButton');
+    const getLobbyByIdButton = document.getElementById('getLobbyByIdButton');
 
     const inputLobbyId = lobbyIdInput?.value || '';
 
@@ -400,23 +419,22 @@ async function handlelookUpLobbyById() {
     }
 
     // Показываем индикатор загрузки
-    if (lookUpLobbyByIdButton) {
-        lookUpLobbyByIdButton.disabled = true;
-        lookUpLobbyByIdButton.textContent = 'Смотрим...';
+    if (getLobbyByIdButton) {
+        getLobbyByIdButton.disabled = true;
+        getLobbyByIdButton.textContent = 'Смотрим...';
     }
     
     // Вызываем функцию поиска лобби по айди
-    const result = await lobbyop.lookUpLobbyById(inputLobbyId);
+    const result = await lobbyop.getLobbyById(inputLobbyId);
     
     // Восстанавливаем кнопку
-    if (lookUpLobbyByIdButton) {
-        lookUpLobbyByIdButton.disabled = false;
-        lookUpLobbyByIdButton.textContent = 'Найти лобби!';
+    if (getLobbyByIdButton) {
+        getLobbyByIdButton.disabled = false;
+        getLobbyByIdButton.textContent = 'Найти лобби!';
     }
     
     if (result.success) {
         window.location.href = `../html/alphastriker-lobby.html?id=${result.data.id}`;
-        // window.location.href = `lobby.html?id=${inputLobbyId}`;
     } else {
         alert('Ошибка: ' + result.error);
     }
@@ -452,15 +470,11 @@ async function handlejoinLobbyById() {
         joinLobbyByIdButton.textContent = 'Зайти в лобби!';
     }
     
-    /*
     if (result.success) {
-        // Успешный вход - обновляем интерфейс
-        updateUIAfterLogin(result.data);
+        window.location.href = `../html/alphastriker-lobby.html?id=${inputLobbyId}`;
     } else {
-        // Ошибка - показываем сообщение
         alert('Ошибка: ' + result.error);
     }
-    */
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -468,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Навешиваем обработчики на кнопки
     const createLobbyButton = document.getElementById('createLobbyButton');
     const joinLobbyByIdButton = document.getElementById('joinLobbyByIdButton');
-    const lookUpLobbyByIdButton = document.getElementById('lookUpLobbyByIdButton');
+    const getLobbyByIdButton = document.getElementById('getLobbyByIdButton');
     
     if (createLobbyButton) {
         createLobbyButton.addEventListener('click', handleLobbyCreation);
@@ -476,8 +490,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (joinLobbyByIdButton) {
         joinLobbyByIdButton.addEventListener('click', handlejoinLobbyById);
     }
-    if (lookUpLobbyByIdButton) {
-        lookUpLobbyByIdButton.addEventListener('click', handlelookUpLobbyById);
+    if (getLobbyByIdButton) {
+        getLobbyByIdButton.addEventListener('click', handleGetLobbyById);
     }
 
     // Для обновления страницы лобби

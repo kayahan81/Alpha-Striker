@@ -113,6 +113,10 @@ main {
     align-content: space-between;
 }
 
+.lobby-container{
+    display: grid;
+    gap: 20px;
+}
 .highlight-element{
     border-top: 2px solid rgba(150, 118, 47, 0.95);
 }
