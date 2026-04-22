@@ -344,18 +344,12 @@ function handleLogout() {
 }
 
 
-
-// ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
 document.addEventListener('DOMContentLoaded', () => {
-    // Считываем данные из конфига (сервер, порт и ручки)
     serverConfig.initConfig();
-    // Проверяем состояние при загрузке
+
     checkAuthState();
-    
-    // Запускаем автоматическую проверку токена каждую минуту
     startAutoCheck(60000); // 60 секунд
-    
-    // Навешиваем обработчики на кнопки
+
     const loginButton = document.getElementById('loginButton');
     const logoutButton = document.getElementById('logoutButton');
     

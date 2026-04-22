@@ -111,12 +111,12 @@ export const playerop = {
                 return playerFactions;
             } else {
                 console.error(`Не удалось получить фракции игрока ${playerId}: игрок не выбирал фракций раньше`, result.error);
-                return `Игрок ${playerId} не выбирал фракций раньше`; // Возвращаем ID как имя по умолчанию
+                return;
             }
 
         } catch (error) {
             console.error(`Ошибка в getFactionsByPlayerId для ${playerId}:`, error);
-            return `Игрок ${playerId}`;
+            return;
         }
     },
     // Очистка кэша
@@ -378,7 +378,7 @@ export class playerCard{
 
     renderPlayerCard() {
         const allready = this.lobbyData.areAllPlayersReady()
-        if (!allready){
+        if (!(allready && this.lobbyData.players.length != 1)){
             return `
             <div class="player-info">
                 <div class="player-avatar">
@@ -393,6 +393,7 @@ export class playerCard{
                     <input type="checkbox" class="ready-checkbox" 
                         ${this.playerData.isReady ? 'checked' : ''}
                         ${!this.isCurrentPlayer ? 'disabled' : ''}>
+                    <span class="checkbox-custom"></span>
                     <span>Готов</span>
                 </label>
             </div>
@@ -413,10 +414,12 @@ export class playerCard{
                         <input type="checkbox" class="ready-checkbox" 
                             ${this.playerData.isReady ? 'checked' : ''}
                             ${!this.isCurrentPlayer ? 'disabled' : ''}>
+                        <span class="checkbox-custom"></span>
                         <span>Готов</span>
                         <input type="checkbox" class="finish-checkbox" 
                             ${this.playerData.isFinished ? 'checked' : ''}
                             ${!this.isCurrentPlayer ? 'disabled' : ''}>
+                        <span class="checkbox-custom"></span>
                         <span>Закончить бой?</span>
                     </label>
                 </div>
@@ -485,3 +488,111 @@ export class playerCard{
         }
     }
 }
+
+
+function renderFactionSelector(factions = [], selectedFaction = '') {
+    // Генерируем options для select
+    const options = factions.map(faction => 
+        `<option value="${faction}" ${selectedFaction === faction ? 'selected' : ''}>${faction}</option>`
+    ).join('');
+    
+    return `
+        <div class="faction-selector-wrapper">
+            <select id="factionSelector" class="faction-selector">
+                ${options}
+                <option value="AddNewFaction">➕ Добавить новую фракцию</option>
+            </select>
+            
+            <div id="newFactionContainer" class="new-faction-container" style="display: none; margin-top: 10px;">
+                <input type="text" id="newFactionName" class="new-faction-input" 
+                       placeholder="Введите название фракции">
+                <button type="button" id="addFactionBtn" class="add-faction-btn">Добавить</button>
+            </div>
+        </div>
+    `;
+}
+
+function attachFactionEvents(container, onFactionSelected, onNewFactionAdded) {
+    const selector = container.querySelector('#factionSelector');
+    const inputContainer = container.querySelector('#newFactionContainer');
+    const newFactionInput = container.querySelector('#newFactionName');
+    const addFactionBtn = container.querySelector('#addFactionBtn');
+    
+    if (!selector) return;
+    
+    // Показываем/скрываем поле ввода новой фракции
+    const toggleNewFactionInput = () => {
+        if (selector.value === 'AddNewFaction') {
+            inputContainer.style.display = 'block';
+            if (newFactionInput) newFactionInput.focus();
+        } else {
+            inputContainer.style.display = 'none';
+            // Если выбрана существующая фракция, вызываем колбэк
+            if (onFactionSelected && selector.value !== 'AddNewFaction') {
+                onFactionSelected(selector.value);
+            }
+        }
+    };
+    
+    selector.addEventListener('change', toggleNewFactionInput);
+    
+    // Добавление новой фракции
+    if (addFactionBtn && newFactionInput) {
+        addFactionBtn.addEventListener('click', async () => {
+            const newFactionName = newFactionInput.value.trim();
+            if (!newFactionName) {
+                alert('Введите название фракции');
+                return;
+            }
+            
+            // Добавляем в select
+            const newOption = document.createElement('option');
+            newOption.value = newFactionName;
+            newOption.textContent = newFactionName;
+            selector.insertBefore(newOption, selector.querySelector('option[value="AddNewFaction"]'));
+            
+            selector.value = newFactionName;
+            inputContainer.style.display = 'none';
+            newFactionInput.value = '';
+            
+            // Вызываем колбэк с новой фракцией
+            if (onNewFactionAdded) {
+                await onNewFactionAdded(newFactionName);
+            }
+            if (onFactionSelected) {
+                onFactionSelected(newFactionName);
+            }
+        });
+        
+        newFactionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addFactionBtn.click();
+        });
+    }
+    
+    // Инициализация
+    toggleNewFactionInput();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Находим контейнер, куда нужно вставить селектор фракций
+    const container = document.getElementById('factionContainer');
+    
+    if (container) {
+        
+        const currentPlayerId = auth.getPlayerId();
+        const availableFactions = await playerop.getFactionsByPlayerId(currentPlayerId);
+        
+        // Рендерим HTML в контейнер
+        container.innerHTML = renderFactionSelector(availableFactions);
+        
+        // Привязываем события
+        attachFactionEvents(
+            container,
+            (selectedFaction) => {
+                console.log('Выбрана фракция:', selectedFaction);
+                // Сохраняем выбранную фракцию
+                window.selectedFaction = selectedFaction;
+            }
+        );
+    }
+});

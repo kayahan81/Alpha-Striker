@@ -305,7 +305,7 @@ async function handleLobbyCreation() {
 
     const placeInput = document.getElementById('place');
     const sizeInput = document.getElementById('size');
-    const factionInput = document.getElementById('faction');
+    const factionInput = document.getElementById('factionSelector');
     const rankedInput = document.getElementById('ranked')
 
     const createLobbyButton = document.getElementById('createLobbyButton');
@@ -337,7 +337,7 @@ async function handleLobbyCreation() {
     }
     
     // Вызываем функцию создания лобби
-    const result = await lobbyop.createLobby(lobbyData);
+    const result = await lobbyManager.createLobby(lobbyData);
     
     // Восстанавливаем кнопку
     if (createLobbyButton) {
@@ -374,9 +374,9 @@ async function updateUIAfterLoadingLobby() {
         const lobbyInfo = document.getElementById('lobbyInfo');
         if(!lobbyInfo) return;
 
-        lobbyInfo.innerHTML = `<div>Бой номер ${lobbyData.id} в ${lobbyData.meetingPlace}</div><div>Условия: Размер - ${lobbyData.matchSize}</div>`;
+        lobbyInfo.innerHTML = `<div>Бой номер ${lobbyData.id} в <a href="https://yandex.ru/maps/-/CPrXAW1r" class="alpha-rules">${lobbyData.meetingPlace}</a></div><div>Условия: Размер - ${lobbyData.matchSize}</div>`;
 
-
+        
         
         const lobbyContainer = document.getElementById('lobbyContainer');
         if (!lobbyContainer) return;
@@ -425,7 +425,7 @@ async function handleGetLobbyById() {
     }
     
     // Вызываем функцию поиска лобби по айди
-    const result = await lobbyop.getLobbyById(inputLobbyId);
+    const result = await lobbyManager.getLobbyById(inputLobbyId);
     
     // Восстанавливаем кнопку
     if (getLobbyByIdButton) {
@@ -442,7 +442,7 @@ async function handleGetLobbyById() {
 
 async function handlejoinLobbyById() {
 
-    const factionInput = document.getElementById('faction');
+    const factionInput = document.getElementById('factionSelector');
     const lobbyIdInput = document.getElementById('lobbyIdInput');
     const joinLobbyByIdButton = document.getElementById('joinLobbyByIdButton');
 
@@ -462,7 +462,7 @@ async function handlejoinLobbyById() {
     }
     
     // Вызываем функцию захода в лобби
-    const result = await lobbyop.joinLobbyById(inputLobbyId,faction);
+    const result = await lobbyManager.joinLobbyById(inputLobbyId,faction);
     
     // Восстанавливаем кнопку
     if (joinLobbyByIdButton) {

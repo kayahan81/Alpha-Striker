@@ -53,20 +53,24 @@
             <h2>Быстрое создание/поиск лобби</h2>
             <div>
               <label for="place">Место встречи:</label>
-              <input type="text" id="place" placeholder="Место встречи" value="Main Meeting Place">
+              <input type="text" id="place" placeholder="Место встречи" value="Клуб в Европолисе">
             </div>
             <div>
               <label for="size">Размер армии:</label>
-              <input type="number" id="size" min="0" max="9999" value="81">
+              <input type="number" id="size" min="0" max="9999" value="300">
             </div>
-            <div>
-              <label for="faction">Фракция:</label>
-              <select id="faction">
-                <option value="Clan Wolf">Clan Wolf</option>
-                <option value="Clan Jade Falcon">Clan Jade Falcon</option>
-                <option value="Clan Ghost Bear">Clan Ghost Bear</option>
-                <option value="Inner Sphere">Inner Sphere</option>
-              </select>
+            <div id="factionContainer">
+              <div class="faction-selector-wrapper">
+                  <label>Выберите фракцию:</label>
+                  <select id="factionSelector" class="faction-selector">
+                      ${options}
+                  </select>
+              </div>
+              <div id="newFactionContainer" style="display: none; margin-top: 10px;">
+                  <input type="text" id="newFactionName" 
+                         placeholder="Название новой фракции">
+                  <button id="addFactionBtn" class="add-faction-btn">Добавить</button>
+              </div>
             </div>
             <div>
               <label>
@@ -80,7 +84,7 @@
               <input type="number" id="lobbyIdInput" min="1" max="1000" value="18">
             </div>
             <button id="joinLobbyByIdButton">Зайти в лобби!</button>
-            <button id="lookUpLobbyByIdButton">Найти лобби!</button>
+            <button id="getLobbyByIdButton">Найти лобби!</button>
           </div>
         </div>
         <div style="grid-area: a; align-self: center; justify-self: center;">

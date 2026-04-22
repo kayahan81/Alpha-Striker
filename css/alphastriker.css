@@ -115,8 +115,67 @@ main {
 
 .lobby-container{
     display: grid;
+    font-size: 18px;
     gap: 20px;
 }
+
+.ready-checkbox-label input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Создаём кастомный */
+.checkbox-custom {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: #2c3e50;
+    border: 2px solid #4a627a;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+/* Состояние checked */
+.ready-checkbox-label input[type="checkbox"]:checked + .checkbox-custom {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+/* Галочка */
+.ready-checkbox-label input[type="checkbox"]:checked + .checkbox-custom::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Hover эффект */
+.ready-checkbox-label:hover .checkbox-custom {
+    border-color: #6c8db0;
+}
+
+/* Disabled состояние */
+.ready-checkbox-label input[type="checkbox"]:disabled + .checkbox-custom {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ready-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+}
+
 .highlight-element{
     border-top: 2px solid rgba(150, 118, 47, 0.95);
 }
