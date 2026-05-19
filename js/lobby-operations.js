@@ -39,31 +39,47 @@ export const lobbyDataParser = {
             updatedAt: new Date(responseData.updatedAt),
             players: players,
             playerCount: players.length,
+            maxPlayers: 2,
             
-            // Есть ли игрок в лоббы
+            // Проверка, есть ли свободное место
+            hasFreeSlot() {
+                return this.players.length < this.maxPlayers;
+            },
+            
+            // Проверка, заполнено ли лобби
+            isFull() {
+                return this.players.length >= this.maxPlayers;
+            },
+            
+            // Проверка, может ли игрок присоединиться (есть место ИЛИ игрок уже в лобби)
+            canJoin(playerId) {
+                return this.isPlayerInLobby(playerId) || this.hasFreeSlot();
+            },
+            
+            // Есть ли игрок в лобби
             isPlayerInLobby(playerId) {
                 return this.players.some(p => p.id === playerId);
             },
             
-            // 
+            // Получить игрока по ID
             getPlayerById(playerId) {
                 return this.players.find(p => p.id === playerId);
             },
             
+            // Все ли игроки готовы
             areAllPlayersReady() {
-                return this.players.every(p => p.isReady);
+                return this.players.length > 0 && this.players.every(p => p.isReady);
             },
             
-            // Чтобы случайно не начать начатую игру 
+            // Можно ли начать игру
             canStartGame() {
                 return this.status === 'open' && 
-                       this.players.length >= 2 && 
+                       this.players.length === 2 && 
                        this.areAllPlayersReady();
             }
         };
-        
     }
-}
+};
 
 export const lobbyManager = {
     createPlayerData(playerId, faction){
@@ -71,6 +87,116 @@ export const lobbyManager = {
         return {
             [playerKey]: { faction: faction }
         };
+    },
+
+    // НОВЫЙ МЕТОД: Проверка, есть ли свободное место в лобби
+    hasFreeSlot(lobbyData) {
+        // Подсчитываем количество игроков в лобби
+        let playerCount = 0;
+        for (const key in lobbyData) {
+            if (key.startsWith('player')) {
+                playerCount++;
+            }
+        }
+        
+        // Максимальный размер лобби (matchSize - это количество юнитов? или игроков?)
+        // Судя по вашему коду, matchSize = 350 (это размер армии, не количество игроков)
+        // Поэтому нужно отдельное поле maxPlayers или просто ограничение на 2 игрока
+        
+        // В вашем случае лобби рассчитано на 2 игроков
+        const MAX_PLAYERS = 2;
+        
+        return playerCount < MAX_PLAYERS;
+    },
+
+    // НОВЫЙ МЕТОД: Получить количество игроков в лобби
+    getPlayerCount(lobbyData) {
+        let playerCount = 0;
+        for (const key in lobbyData) {
+            if (key.startsWith('player')) {
+                playerCount++;
+            }
+        }
+        return playerCount;
+    },
+
+   
+    async joinLobbyById(inputLobbyId, faction){
+        if (!auth.isLoggedIn()) {
+            alert('Авторизуйтесь');
+            console.error('Ошибка: пользователь не авторизован');
+            return {
+                success: false,
+                error: "Сеанс устарел. Авторизуйтесь снова."
+            };
+        }
+        
+        try{
+            // Получаем текущее состояние лобби
+            const lobbyCheck = await this.getLobbyById(inputLobbyId);
+            
+            if (!lobbyCheck.success) {
+                return {
+                    success: false,
+                    error: "Не удалось проверить состояние лобби"
+                };
+            }
+            
+            const parsedLobby = lobbyDataParser.parse(lobbyCheck.data);
+            const currentPlayerId = parseInt(auth.getPlayerId());
+            const isPlayerInLobby = parsedLobby.isPlayerInLobby(currentPlayerId);
+            
+            // Если игрок уже в лобби
+            if (isPlayerInLobby) {
+                console.log('Игрок уже в лобби');
+                return {
+                    success: true,
+                    data: { id: inputLobbyId },
+                    alreadyInLobby: true
+                };
+            }
+            
+            // Если игрок НЕ в лобби И лобби заполнено
+            if (!isPlayerInLobby && parsedLobby.isFull()) {
+                alert('Лобби заполнено! Нет свободных мест.');
+                return {
+                    success: false,
+                    error: "Лобби заполнено"
+                };
+            }
+            
+            // Игрок не в лобби и есть свободное место - присоединяемся
+            const playerData = this.createPlayerData(auth.getPlayerId(), faction);
+            const response = await fetch(`${serverConfig.getUrl()}${serverConfig.getEndpoints().lobby.get}/${inputLobbyId}/${serverConfig.getEndpoints().lobby.join}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + auth.getToken(),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    playerId: +auth.getPlayerId(),
+                    ...playerData,
+                })               
+            });
+        
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Ошибка: не удалось присоединиться к лобби');
+            }
+            
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };                
+        }
+        catch(error){
+            console.error('Ошибка присоединения:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
     },
 
     getLobbyIdFromUrl() {
@@ -140,19 +266,21 @@ export const lobbyManager = {
         }
         else{
             try{
+                console.log(`Запрашиваем лобби ${inputLobbyId} с сервера`);
                 const response = await fetch(`${serverConfig.getUrl()}${serverConfig.getEndpoints().lobby.get}/${inputLobbyId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                     }            
                 })
-                
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     alert('Ошибка: не найдено')
                     throw new Error(errorData.message || 'Ошибка: не найдено');
                 }
                 const data = await response.json();
+                console.log(`Получены данные лобби ${inputLobbyId}:`, data);
                 return {
                     success: true,
                     data: data
@@ -166,52 +294,86 @@ export const lobbyManager = {
                 };
             }
         } 
-  
     },
 
     async joinLobbyById(inputLobbyId, faction){
         if (!auth.isLoggedIn()) {
-            alert('Авторизуйтесь')
+            alert('Авторизуйтесь');
             console.error('Ошибка: пользователь не авторизован');
             return {
                 success: false,
                 error: "Сеанс устарел. Авторизуйтесь снова."
             };
         }
-        else{
-            try{
-                const playerData = this.createPlayerData(auth.getPlayerId(), faction)
-                const response = await fetch(`${serverConfig.getUrl()}${serverConfig.getEndpoints().lobby.get}/${inputLobbyId}/${serverConfig.getEndpoints().lobby.join}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + auth.getToken(),
-                    },
-                    body: JSON.stringify({
-                        playerId: +auth.getPlayerId(),
-                        ...playerData,
-                    })               
-                })
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    alert('Ошибка: лобби уже заполнено')
-                    throw new Error(errorData.message || 'Ошибка: лобби уже заполнено');
-                }
-                const data = await response.json();
-                return {
-                    success: true,
-                    data: data
-                };                
-            }
-            catch(error){
-                console.error('Ошибка входа:', error);
+        try{
+            // Получаем текущее состояние лобби
+            const lobbyCheck = await this.getLobbyById(inputLobbyId);
+
+            if (!lobbyCheck.success) {
                 return {
                     success: false,
-                    error: error.message
+                    error: "Не удалось проверить состояние лобби"
                 };
             }
-        } 
+
+            const parsedLobby = lobbyDataParser.parse(lobbyCheck.data);
+            const currentPlayerId = parseInt(auth.getPlayerId());
+            const isPlayerInLobby = parsedLobby.isPlayerInLobby(currentPlayerId);
+
+            // Если игрок НЕ в лобби И лобби заполнено
+            if (!isPlayerInLobby && parsedLobby.isFull()) {
+                alert('Лобби заполнено! Нет свободных мест.');
+                return {
+                    success: false,
+                    error: "Лобби заполнено"
+                };
+            }
+
+            // Если игрок уже в лобби, просто перенаправляем на страницу лобби
+            if (isPlayerInLobby) {
+                console.log('Игрок уже в лобби, перенаправляем...');
+                return {
+                    success: true,
+                    data: { id: inputLobbyId },
+                    alreadyInLobby: true
+                };
+            }
+
+            // Игрок не в лобби и есть свободное место - присоединяемся
+            const playerData = this.createPlayerData(auth.getPlayerId(), faction);
+            const response = await fetch(`${serverConfig.getUrl()}${serverConfig.getEndpoints().lobby.get}/${inputLobbyId}/${serverConfig.getEndpoints().lobby.join}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + auth.getToken(),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    playerId: +auth.getPlayerId(),
+                    ...playerData,
+                })               
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Ошибка: не удалось присоединиться к лобби');
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data: data
+            };                
+        }
+        catch(error){
+            console.error('Ошибка присоединения:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
     },
+
 
     async playerReadyInLobbyById(inputLobbyId){
         if (!auth.isLoggedIn()) {
@@ -360,40 +522,61 @@ function getLobbyIdFromUrl() {
 
 
 // Функция обновления интерфейса после перехода на страницу 
+// Функция обновления интерфейса после перехода на страницу лобби
 async function updateUIAfterLoadingLobby() {
     try {
-
         const currentPlayerId = auth.getPlayerId();
+        
+        // Проверяем авторизацию
+        if (!currentPlayerId) {
+            console.error('Пользователь не авторизован');
+            return;
+        }
+        
         const availableFactions = await playerop.getFactionsByPlayerId(currentPlayerId);
         
         // Получаем данные лобби
-        const lobbyId =  getLobbyIdFromUrl();
-        const result = await lobbyManager.getLobbyById(lobbyId);
-        const lobbyData = lobbyDataParser.parse(result.data);
-
-        const lobbyInfo = document.getElementById('lobbyInfo');
-        if(!lobbyInfo) return;
-
-        lobbyInfo.innerHTML = `<div>Бой номер ${lobbyData.id} в <a href="https://yandex.ru/maps/-/CPrXAW1r" class="alpha-rules">${lobbyData.meetingPlace}</a></div><div>Условия: Размер - ${lobbyData.matchSize}</div>`;
-
+        const lobbyId = getLobbyIdFromUrl();
+        if (!lobbyId) {
+            console.error('ID лобби не найден в URL');
+            return;
+        }
         
+        const result = await lobbyManager.getLobbyById(lobbyId);
+        if (!result.success) {
+            console.error('Не удалось загрузить лобби:', result.error);
+            return;
+        }
+        
+        const lobbyData = lobbyDataParser.parse(result.data);
+        
+        // Проверяем, есть ли текущий игрок в лобби
+        const isPlayerInLobby = lobbyData.isPlayerInLobby(parseInt(currentPlayerId));
+        
+        const lobbyInfo = document.getElementById('lobbyInfo');
+        if(lobbyInfo) {
+            lobbyInfo.innerHTML = `<div>Бой номер ${lobbyData.id} в <a href="https://yandex.ru/maps/-/CPrXAW1r" class="alpha-rules">${lobbyData.meetingPlace}</a></div>
+                                   <div>Условия: Размер - ${lobbyData.matchSize}</div>
+                                   <div>Игроков: ${lobbyData.playerCount}/2</div>`;
+        }
         
         const lobbyContainer = document.getElementById('lobbyContainer');
         if (!lobbyContainer) return;
         
         lobbyContainer.innerHTML = '';
         
-        // Рендерим карточки игроков
+        // Рендерим карточки игроков (всегда 2 слота)
         for (let i = 0; i < 2; i++) {
             const player = lobbyData.players[i];
-            const isCurrentPlayer = player?.id == currentPlayerId;            
+            const isCurrentPlayer = player?.id == currentPlayerId;
+            
             const card = new playerCard(
                 player,
                 i,
                 isCurrentPlayer,
                 getLobbyIdFromUrl(),
                 lobbyData,
-                availableFactions
+                availableFactions || []
             );
             
             lobbyContainer.appendChild(card.render());
@@ -401,7 +584,6 @@ async function updateUIAfterLoadingLobby() {
         
     } catch (error) {
         console.error('Ошибка вывода:', error);
-        return { success: false, error: error.message };
     }
 }
 
@@ -441,7 +623,6 @@ async function handleGetLobbyById() {
 }
 
 async function handlejoinLobbyById() {
-
     const factionInput = document.getElementById('factionSelector');
     const lobbyIdInput = document.getElementById('lobbyIdInput');
     const joinLobbyByIdButton = document.getElementById('joinLobbyByIdButton');
@@ -462,7 +643,7 @@ async function handlejoinLobbyById() {
     }
     
     // Вызываем функцию захода в лобби
-    const result = await lobbyManager.joinLobbyById(inputLobbyId,faction);
+    const result = await lobbyManager.joinLobbyById(inputLobbyId, faction);
     
     // Восстанавливаем кнопку
     if (joinLobbyByIdButton) {
@@ -502,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Обнаружена страница лобби, загружаем данные...');
         updateUIAfterLoadingLobby();
     } else {
-        console.log('Не страница лобби, пропускаем загрузку');
+        //console.log('Не страница лобби, пропускаем загрузку');
     }
 
 });

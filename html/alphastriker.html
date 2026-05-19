@@ -10,6 +10,7 @@
       <link rel="stylesheet" href="../css/alphastriker.css">
       <script type="module" src="../js/authorization.js"></script>
       <script type="module" src="../js/lobby-operations.js"></script>
+      <script type="module" src="../js/lobby-list.js"></script>
   </head>
   <body class="bg-img" style="--bg-url: url(../assets/fent3.jpg)">
     <header class="top-panel">
@@ -20,12 +21,12 @@
       <div>
         <h3><a href="alphastriker.html" class="alpha-rules">Главная</a></h3>
       </div>
-      <div>
+      <!--<div>
         <h3> <a href="alphastriker-players.html" class="alpha-rules">Таблица лидеров</a></h3>
-      </div>
-      <div>
+      </div> -->
+      <!--<div>
         <h3>Конструктор</h3>
-      </div>
+      </div>-->
       <div>
         <h3> <a href="alphastriker-about.html" class="alpha-rules">О нас</a></h3>
       </div>
@@ -35,6 +36,7 @@
             <input class="item" type="text" id="login" placeholder="Логин">
             <input class="item" type="password" id="password" placeholder="Пароль">
             <button class="item" id="loginButton">Войти</button>
+            <button class="item" id="regButton">Регистрация</button>
           </div>
         </div>
         <div id="userGreeting" style="display: none;">
@@ -47,7 +49,7 @@
       </div>
     </header>
     <main>
-      <div class="menugrid mainpage">
+      <div class="menugrid mainpage" style="height: 100%;">
         <div style="grid-area: b;">
           <div class="menugrid" style="gap: 5px;">
             <h2>Быстрое создание/поиск лобби</h2>
@@ -79,56 +81,19 @@
               </label>
             </div>
             <button id="createLobbyButton">Создать лобби!</button>
-            <div>
+            <!--<div>
               <label for="lobbyIdInput">ID лобби:</label>
               <input type="number" id="lobbyIdInput" min="1" max="1000" value="18">
-            </div>
-            <button id="joinLobbyByIdButton">Зайти в лобби!</button>
-            <button id="getLobbyByIdButton">Найти лобби!</button>
+            </div> -->
+            <!--<button id="joinLobbyByIdButton">Зайти в лобби!</button>-->
+            <!-- <button id="getLobbyByIdButton">Найти лобби!</button> -->
           </div>
         </div>
         <div style="grid-area: a; align-self: center; justify-self: center;">
-          <div style="align-self: center; justify-self: center;">Ближайшие бои:</div>
-          <div style="align-self: center; justify-self: center;">
-            <table class="table-lobby">
-              <tr>
-                <td>Имя Игрока</td>
-                <td>Размер</td>
-                <td>Эпоха</td>
-                <td>Место</td>
-                <td>Дата и время</td>
-              </tr>
-              <tr>
-                <td>Влад Борщ 2004</td>
-                <td>600</td>
-                <td>Мезозой</td>
-                <td>Клуб "Фистинг"</td>
-                <td>02.04.2026 12:37</td>
-              </tr>
-              <tr>
-                <td>Влад Борщ 2004</td>
-                <td>600</td>
-                <td>Мезозой</td>
-                <td>Клуб "Фистинг"</td>
-                <td>02.04.2026 13:48</td>
-              </tr>
-            </table>
-            <!--
-            <ul>
-              <li>
-                Игрок1 Место Дата
-              </li>
-              <li>
-                Игрок2 Место Дата
-              </li>
-              <li>
-                Игрок3 Место Дата
-              </li>           
-            </ul>--> 
-          </div>
+          <div id="lobbiesListContainer"></div>
         </div>
         <div style="grid-area: c;">
-          <div>
+          <!-- <div>
             Ближайшие события
             <div>
               <ul>
@@ -137,11 +102,11 @@
                 </li>
               </ul>
             </div>
-          </div>
+          </div> -->
           <div>
             Полезные ссылки
             <ul>
-              <li>
+              <li style="text-align: center;">
                 <a href="https://hobbygames.ru/download/rules/bt-alpha-strike-rules.pdf" class="alpha-rules" style="color: rgb(255, 251, 248);">Правила</a>
               </li>
             </ul>
@@ -150,7 +115,7 @@
       </div>
     </main>
     <footer>
-      Подвал сайта
+      
     </footer>
   </body>
 </html>

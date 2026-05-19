@@ -1,4 +1,6 @@
 import { playerop } from './player-operations.js';
+import { loadAndDisplayLobbies } from './lobby-list.js';
+
 
 // Ключи
 const AUTH_KEYS = {
@@ -286,14 +288,78 @@ function startAutoCheck(intervalMs = 60000) {
                 showNotification('Ваша сессия истекла. Пожалуйста, войдите снова.', 'warning');
             }
         }
-        else{stopAutoCheck}
+        else{stopAutoCheck()}
     }, intervalMs);
 }
 
 
 // Вспомогательная функция для уведомлений
+// Вспомогательная функция для уведомлений (улучшенная версия)
 function showNotification(message, type = 'info') {
-    alert(message);
+    // Удаляем старые уведомления, если они есть
+    const oldNotifications = document.querySelectorAll('.custom-notification');
+    oldNotifications.forEach(notif => notif.remove());
+    
+    // Создаем уведомление
+    const notification = document.createElement('div');
+    notification.className = 'custom-notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        z-index: 1001;
+        animation: slideIn 0.3s ease-out;
+        max-width: 350px;
+        word-wrap: break-word;
+    `;
+    
+    // Цвет в зависимости от типа
+    if (type === 'error') {
+        notification.style.backgroundColor = '#f44336';
+    } else if (type === 'success') {
+        notification.style.backgroundColor = '#4CAF50';
+    } else if (type === 'warning') {
+        notification.style.backgroundColor = '#ff9800';
+    } else {
+        notification.style.backgroundColor = '#2196F3';
+    }
+    
+    notification.textContent = message;
+    
+    // Добавляем анимацию, если её нет
+    if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Автоматическое удаление через 3 секунды
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideIn 0.3s ease-out reverse';
+            setTimeout(() => {
+                if (notification.parentNode) notification.remove();
+            }, 300);
+        }
+    }, 3000);
 }
 
 // Обработчик кнопки входа
@@ -343,6 +409,174 @@ function handleLogout() {
     updateUIAfterLogout();
 }
 
+// Функция для отображения модального окна регистрации
+function showRegistrationModal() {
+    // Создаем модальное окно
+    const modal = document.createElement('div');
+    modal.id = 'registrationModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `;
+    
+    // Создаем форму регистрации
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        ">
+            <h2 style="margin-top: 0; text-align: center;">Регистрация</h2>
+            <form id="registrationForm">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Полное имя:</label>
+                    <input type="text" id="regFullName" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Никнейм:</label>
+                    <input type="text" id="regNickname" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Город:</label>
+                    <input type="text" id="regCity" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Контакты:</label>
+                    <input type="text" id="regContacts" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Предпочитаемая локация:</label>
+                    <input type="text" id="regPreferredLocation" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Пароль:</label>
+                    <input type="password" id="regPassword" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Подтверждение пароля:</label>
+                    <input type="password" id="regConfirmPassword" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" id="cancelRegBtn" style="padding: 8px 16px; background: #ccc; border: none; border-radius: 4px; cursor: pointer;">Отмена</button>
+                    <button type="submit" style="padding: 8px 16px; background: rgba(194, 118, 47, 0.9); color: white; border: none; border-radius: 4px; cursor: pointer;">Зарегистрироваться</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Обработчик отправки формы
+    const form = document.getElementById('registrationForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleRegistration();
+    });
+    
+    // Обработчик закрытия модального окна
+    const cancelBtn = document.getElementById('cancelRegBtn');
+    cancelBtn.addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    // Закрытие по клику на фон
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Функция регистрации
+async function handleRegistration() {
+    // Получаем значения из формы
+    const fullName = document.getElementById('regFullName')?.value;
+    const nickname = document.getElementById('regNickname')?.value;
+    const city = document.getElementById('regCity')?.value;
+    const contacts = document.getElementById('regContacts')?.value;
+    const preferredLocation = document.getElementById('regPreferredLocation')?.value;
+    const password = document.getElementById('regPassword')?.value;
+    const confirmPassword = document.getElementById('regConfirmPassword')?.value;
+    
+    // Валидация
+    if (!fullName || !nickname || !city || !contacts || !preferredLocation || !password) {
+        showNotification('Пожалуйста, заполните все поля', 'error');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showNotification('Пароли не совпадают', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showNotification('Пароль должен быть не менее 6 символов', 'error');
+        return;
+    }
+    
+    // Показываем индикатор загрузки
+    const submitBtn = document.querySelector('#registrationForm button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Регистрация...';
+    submitBtn.disabled = true;
+    
+    try {
+        // Отправляем запрос на сервер
+        const response = await fetch(`${serverConfig.getUrl()}players`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                fullName: fullName,
+                nickname: nickname,
+                city: city,
+                contacts: contacts,
+                preferredLocation: preferredLocation,
+                password: password
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Ошибка регистрации');
+        }
+        
+        const data = await response.json();
+        
+        // Закрываем модальное окно
+        const modal = document.getElementById('registrationModal');
+        if (modal) modal.remove();
+        
+        // Показываем сообщение об успехе
+        showNotification('Регистрация успешна! Теперь вы можете войти в систему.', 'success');
+        
+        // Опционально: автоматически заполнить поля логина
+        const loginInput = document.getElementById('login');
+        if (loginInput) {
+            loginInput.value = nickname;
+        }
+        
+    } catch (error) {
+        console.error('Ошибка регистрации:', error);
+        showNotification('Ошибка регистрации: ' + error.message, 'error');
+    } finally {
+        // Восстанавливаем кнопку
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     serverConfig.initConfig();
@@ -352,6 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loginButton = document.getElementById('loginButton');
     const logoutButton = document.getElementById('logoutButton');
+    const regButton = document.getElementById('regButton'); // Добавлено
     
     if (loginButton) {
         loginButton.addEventListener('click', handleLogin);
@@ -360,4 +595,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutButton) {
         logoutButton.addEventListener('click', handleLogout);
     }
+    
+    // Добавлен обработчик для кнопки регистрации
+    if (regButton) {
+        regButton.addEventListener('click', showRegistrationModal);
+    }
+
+    loadAndDisplayLobbies('lobbiesListContainer', {
+        status: 'open',      // Показываем открытые лобби
+        sort: 'created_desc', // Сначала новые
+        limit: 10            // По 10 на страницу
+    });
 });

@@ -92,33 +92,32 @@ export const playerop = {
     },
 
     async getFactionsByPlayerId(playerId){
-        if (!playerId) {
-            console.error('ID игрока не указан');
-            return null;
-        }
-        if (this.cache.has(String(playerId))) {
-            const cached = this.cache.get(String(playerId));
-            console.log(`Фракции игрока ${playerId} взяты из кэша`);
-            return cached.factions;
-        }
-        try {
-            const result = await this.getPlayerData(playerId);
+    if (!playerId) {
+        console.error('ID игрока не указан');
+        return [];  // Возвращаем пустой массив
+    }
+    if (this.cache.has(String(playerId))) {
+        const cached = this.cache.get(String(playerId));
+        console.log(`Фракции игрока ${playerId} взяты из кэша`);
+        return cached.factions || [];
+    }
+    try {
+        const result = await this.getPlayerData(playerId);
 
-            if (result.success && result.data && result.data.factions.length) {
-                const playerFactions = result.data.factions; 
-
-                console.log(`Найдены фракции игрока ${playerId}: ${playerFactions}`);
-                return playerFactions;
-            } else {
-                console.error(`Не удалось получить фракции игрока ${playerId}: игрок не выбирал фракций раньше`, result.error);
-                return;
-            }
-
-        } catch (error) {
-            console.error(`Ошибка в getFactionsByPlayerId для ${playerId}:`, error);
-            return;
+        if (result.success && result.data && result.data.factions) {
+            const playerFactions = result.data.factions; 
+            console.log(`Найдены фракции игрока ${playerId}:`, playerFactions);
+            return Array.isArray(playerFactions) ? playerFactions : [];
+        } else {
+            console.log(`У игрока ${playerId} нет фракций`);
+            return [];  // Возвращаем пустой массив
         }
-    },
+
+    } catch (error) {
+        console.error(`Ошибка в getFactionsByPlayerId для ${playerId}:`, error);
+        return [];
+    }
+},
     // Очистка кэша
     clearCache() {
         this.cache.clear();
@@ -174,24 +173,40 @@ export class playerCard{
     }
     
     renderEmptySlot() {
-        const currentPlayerId = auth.getPlayerId();
+        const currentPlayerId = parseInt(auth.getPlayerId());
         const isCurrentPlayerInLobby = this.isCurrentPlayerInLobby();
-        
+        const isLobbyFull = this.lobbyData?.isFull ? this.lobbyData.isFull() : false;
+
         console.log('Рендер пустого слота:', {
             currentPlayerId,
             isCurrentPlayerInLobby,
+            isLobbyFull,
             lobbyPlayers: this.lobbyData?.players
         });
-        
+
+        // Если игрок уже в лобби - показываем форму приглашения (неважно, заполнено или нет)
         if (isCurrentPlayerInLobby) {
-            console.log('Показываем форму ПРИГЛАШЕНИЯ');
+            console.log('Показываем форму ПРИГЛАШЕНИЯ (игрок в лобби)');
             return this.renderInviteForm();
-        } 
-        else {
-            console.log('Показываем форму ПРИСОЕДИНЕНИЯ');
-            return this.renderJoinForm();
         }
-    }
+
+        // Если игрок НЕ в лобби И лобби заполнено
+        if (isLobbyFull && !isCurrentPlayerInLobby) {
+            return `
+                <div class="lobby-full">
+                    <div class="full-slot">
+                        <span class="full-icon">🚫</span>
+                        <span>Лобби заполнено</span>
+                        <small>Максимум 2 игрока</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Игрок не в лобби, но есть свободное место
+        console.log('Показываем форму ПРИСОЕДИНЕНИЯ (есть место)');
+        return this.renderJoinForm();
+    }   
     
     isCurrentPlayerInLobby() {
         const currentPlayerId = auth.getPlayerId();
@@ -329,9 +344,9 @@ export class playerCard{
                 inputContainer.style.display = 'none';
             }
         };
-        
+
         selector.addEventListener('change', toggleNewFactionInput);
-        
+
         // Добавление новой фракции
         if (addFactionBtn && newFactionInput) {
             addFactionBtn.addEventListener('click', async () => {
@@ -340,27 +355,27 @@ export class playerCard{
                     alert('Введите название фракции');
                     return;
                 }
-                
+
                 // Добавляем в select
                 const newOption = document.createElement('option');
                 newOption.value = newFactionName;
                 newOption.textContent = newFactionName;
                 selector.insertBefore(newOption, selector.querySelector('option[value="AddNewFaction"]'));
-                
+
                 selector.value = newFactionName;
                 inputContainer.style.display = 'none';
                 newFactionInput.value = '';
             });
-            
+
             newFactionInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') addFactionBtn.click();
             });
         }
-        
-        // Присоединение к лобби
+
+        // Присоединение к лобби - после успеха перезагружаем страницу
         joinBtn.addEventListener('click', async () => {
             let selectedFaction = selector.value;
-            
+
             if (selectedFaction === 'AddNewFaction') {
                 selectedFaction = newFactionInput?.value.trim();
                 if (!selectedFaction) {
@@ -368,10 +383,17 @@ export class playerCard{
                     return;
                 }
             }
-            
-            await lobbyManager.joinLobbyById(this.lobbyId, selectedFaction);
+
+            const result = await lobbyManager.joinLobbyById(this.lobbyId, selectedFaction);
+
+            if (result.success) {
+                // Перезагружаем страницу, чтобы показать обновленное состояние лобби
+                window.location.reload();
+            } else {
+                alert('Ошибка: ' + result.error);
+            }
         });
-        
+
         // Инициализация
         toggleNewFactionInput();
     }
@@ -491,8 +513,11 @@ export class playerCard{
 
 
 function renderFactionSelector(factions = [], selectedFaction = '') {
+    // Проверяем, что factions - это массив
+    const factionsArray = Array.isArray(factions) ? factions : [];
+    
     // Генерируем options для select
-    const options = factions.map(faction => 
+    const options = factionsArray.map(faction => 
         `<option value="${faction}" ${selectedFaction === faction ? 'selected' : ''}>${faction}</option>`
     ).join('');
     
@@ -523,10 +548,10 @@ function attachFactionEvents(container, onFactionSelected, onNewFactionAdded) {
     // Показываем/скрываем поле ввода новой фракции
     const toggleNewFactionInput = () => {
         if (selector.value === 'AddNewFaction') {
-            inputContainer.style.display = 'block';
+            if (inputContainer) inputContainer.style.display = 'block';
             if (newFactionInput) newFactionInput.focus();
         } else {
-            inputContainer.style.display = 'none';
+            if (inputContainer) inputContainer.style.display = 'none';
             // Если выбрана существующая фракция, вызываем колбэк
             if (onFactionSelected && selector.value !== 'AddNewFaction') {
                 onFactionSelected(selector.value);
@@ -552,7 +577,7 @@ function attachFactionEvents(container, onFactionSelected, onNewFactionAdded) {
             selector.insertBefore(newOption, selector.querySelector('option[value="AddNewFaction"]'));
             
             selector.value = newFactionName;
-            inputContainer.style.display = 'none';
+            if (inputContainer) inputContainer.style.display = 'none';
             newFactionInput.value = '';
             
             // Вызываем колбэк с новой фракцией
@@ -573,26 +598,49 @@ function attachFactionEvents(container, onFactionSelected, onNewFactionAdded) {
     toggleNewFactionInput();
 }
 
+// Ждем загрузки DOM только если есть контейнер для фракций
 document.addEventListener('DOMContentLoaded', async () => {
     // Находим контейнер, куда нужно вставить селектор фракций
     const container = document.getElementById('factionContainer');
     
     if (container) {
+        // Проверяем, авторизован ли пользователь
+        if (!auth.isLoggedIn()) {
+            console.log('Пользователь не авторизован, пропускаем загрузку фракций');
+            container.innerHTML = '<p>Авторизуйтесь, чтобы выбрать фракцию</p>';
+            return;
+        }
         
         const currentPlayerId = auth.getPlayerId();
-        const availableFactions = await playerop.getFactionsByPlayerId(currentPlayerId);
         
-        // Рендерим HTML в контейнер
-        container.innerHTML = renderFactionSelector(availableFactions);
+        // Проверяем, есть ли ID игрока
+        if (!currentPlayerId) {
+            console.error('ID игрока не найден');
+            container.innerHTML = '<p>Ошибка: ID игрока не найден. Попробуйте перезагрузить страницу.</p>';
+            return;
+        }
         
-        // Привязываем события
-        attachFactionEvents(
-            container,
-            (selectedFaction) => {
-                console.log('Выбрана фракция:', selectedFaction);
-                // Сохраняем выбранную фракцию
-                window.selectedFaction = selectedFaction;
-            }
-        );
+        try {
+            const availableFactions = await playerop.getFactionsByPlayerId(currentPlayerId);
+            
+            // Убеждаемся, что availableFactions - это массив
+            const factions = Array.isArray(availableFactions) ? availableFactions : [];
+            
+            // Рендерим HTML в контейнер
+            container.innerHTML = renderFactionSelector(factions);
+            
+            // Привязываем события
+            attachFactionEvents(
+                container,
+                (selectedFaction) => {
+                    console.log('Выбрана фракция:', selectedFaction);
+                    // Сохраняем выбранную фракцию
+                    window.selectedFaction = selectedFaction;
+                }
+            );
+        } catch (error) {
+            console.error('Ошибка при загрузке фракций:', error);
+            container.innerHTML = '<p>Ошибка при загрузке списка фракций</p>';
+        }
     }
 });
